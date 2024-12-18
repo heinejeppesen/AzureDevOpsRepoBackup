@@ -12,8 +12,6 @@ Cleaning up old data can be done with Storage Account Data Management / Life-cyc
 Further more you can backup the storage account, if you want/need to keep data stored for legal reasons.
 
 
-
-
 # Disclaimer:
 Use at your own risk - Its highly recommended to verify that 
   1) ZIP files are not corrupt
