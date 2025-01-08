@@ -1,59 +1,30 @@
+#Requires -Version 7.0
 Set-StrictMode -Version Latest
-#if ($PSVersionTable.PSVersion.Major -ne 7)
-#{
-#    Write-Warning "Please use PowerShell v7.x or above - Entra Graph module doesn't work properly under 5.1"
-#    Break
-#}
+Import-Module Az.Storage
 
-Import-Module az.KeyVault, az.Storage
-    # Connect using a Managed Service Identity - Comment out '-Identity' if testing from PowerShell / VSCode etc.
-    try {
-        #Connect-AzAccount -Identity -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Output "No system or user assigned identity found. Aborting." 
-        exit
-    }
+## Start config area 
 
-
-
-#Azure DevOps organization name
+    #Azure DevOps organization name
     $AzureDevOpsOrganization = 'betaplace'
 
-#KeyVault information for retrieving Personal Access Token.
-    $KeyVaultName = 'kvbetaplace'
-    $KeyVaultSecret = 'AzureDevOpsBackup'
+    #Storage Account Name and container name, where files are to be uploaded in.
+        $storageAccountName = "sgLogging"
+        $containerName = "devopsbackup"
 
-#Storage Account Name and container name, where files are to be uploaded in.
-    $storageAccountName = "sgLogging"
-    $containerName = "devopsbackup"
+    #This is the naming method used for Azure Storage. This will create a sub container called i.e. 2024-12-31 for a jobs that runs December 31th in 2024.
+        $SubcontainerName = $(Get-Date -f yyyy-MM-dd)
 
-#This is the naming method used for Azure Storage. This will create a sub container called i.e. 2024-12-31 for a jobs that runs December 31th in 2024.
-    $SubcontainerName = $(Get-Date -f yyyy-MM-dd)
+    #Put repositories into subcontainers for the corresponding project in Azure storage account.
+        $UseProjectContainers = $true
 
-#Put repositories into subcontainers for the corresponding project in Azure storage account.
-    $UseProjectContainers = $true
+    #What separates project, repository and branch in the exported filenames.
+        $FileNameSeparator = '__'
 
-#What separates project, repository and branch in the exported filenames.
-    $FileNameSeparator = '__'
+    #DevOps projects to backup repositories in - Add multiple comma separated and set to only 'All' for all projects.
+        $ProjectsInScope         = @('Maester','DevOpsTesting')
+        #$ProjectsInScope         = @('All')
 
-#DevOps projects to backup repositories in - Add multiple comma separated and set to only 'All' for all projects.
-    $ProjectsInScope         = @('Maester','DevOpsTesting')
-    #$ProjectsInScope         = @('All')
-
-#Get Azure PAT for access to ALL repositories - Replace method with another that sets $AzureDevOpsPAT with a valid DevOps Personal Access Token.
-    $AzureDevOpsPAT = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecret -AsPlainText -ErrorAction SilentlyContinue
-    If (!($AzureDevOpsPAT)) {Write-Error "Azure DevOps PAT not returned from $($KeyVaultName) - Error was: $($Error[0].Exception.Message)";return}
-
-
-#Do not change below here.
-
-    #Header used for REST API calls to Azure DevOps
-    $AzureDevOpsAuthenicationHeader = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($AzureDevOpsPAT)")) }
-
-    #Folder used to create backups into.
-    $BackupFolder   = "$($env:Temp)\adoBackup"
-
+## End config area
 
 
 # Function to get repositories
@@ -72,8 +43,6 @@ Function Get-adoRepositories () {
     Return $Data
 
 }
-
-
 
 # Function to get branches for a repository
 Function Get-adoBranches() {
@@ -95,6 +64,7 @@ Function Get-adoBranches() {
 
 }
 
+#Function to export repositories
 Function New-adoRepoExport() {
         param( 
             [Parameter(Mandatory=$true)][string]$ProjectName,
@@ -120,43 +90,12 @@ Function New-adoRepoExport() {
 
 }
 
-Function Invoke-adoBackup() {
-
-    #Create backup folder if it doesn't exist.
-    New-Item -ItemType Directory "$($BackupFolder)" -ErrorAction SilentlyContinue | Out-Null
-    #Clear any files if being rerun, like on a scheduled task.
-    Remove-Item -Path "$($BackupFolder)\*.*"  -Recurse -Force
-
-    #Used for counting number of branches.
-    [int]$Script:BranchCount = 0
-
-    $Repositories = Get-adoRepositories
-    foreach ($Repo in $Repositories) {
-
-        If ( ($ProjectsInScope -notcontains 'All') -And ($Repo.project.name -notin $ProjectsInScope) ) {
-            Write-Verbose "$($Repo.project.name) not in Scope"
-            Continue
-        }
-
-        $Branches = Get-adoBranches -RepositoryId $Repo.id
-        
-        foreach ($Branch in $Branches) {
-            Write-Output "Starting backup of project: $($Repo.project.name) / Repository: $($repo.Name) / Branch: $($Branch.name.Replace('refs/heads/',''))"
-            $BranchName = $($Branch.name.Replace('refs/heads/','')) # get rid of refs/heads
-            
-            $Script:BranchCount += 1
-            
-            New-adoRepoExport -ProjectName $Repo.project.name -Repository $repo.Name -Branch $BranchName
-        }
-    }
-
-    #Count number of files expected to be backed up to storage account
-    [int]$Script:FilesCount = @(Get-ChildItem -Path "$($BackupFolder)").Count
-
-}
-
-
+#Function to handle uploading files to Azure Storage Blob
 Function Invoke-BackupToAzureStorage() {
+    param( 
+        [Parameter(Mandatory=$true)][Boolean]$CleanUpAfterUpload
+    )
+
 
     $Backupfiles = @(Get-ChildItem -Path "$($BackupFolder)")
     If ($Backupfiles.count -eq 0) {
@@ -176,8 +115,7 @@ Function Invoke-BackupToAzureStorage() {
 
 
     #Upload zip files to Storage Account
-    Write-Output ''
-    
+   
     If ($Backupfiles.count -eq 0) {
         Write-Output "No files found to backup in $($backupReposFolder) - aborting"
         break
@@ -200,6 +138,11 @@ Function Invoke-BackupToAzureStorage() {
 
                 Write-Output "Uploading $($currentFile.Name) to Azure Storage in $($containerPath)"
                 Set-AzStorageBlobContent -File $currentFile.FullName -Container $containerName -Blob $containerPath -Context $storageContext -Force | Out-Null
+                If ($CleanUpAfterUpload -eq $true) {
+                    Write-Output "Removing $($currentFile)"
+                    Remove-Item -Path $currentFile
+                }
+                
             }
             catch {
               Write-Output "Error occured while uploading: Error message was: $($Error[0])"     
@@ -207,23 +150,85 @@ Function Invoke-BackupToAzureStorage() {
             }        
         }
     }
-
+    
     #Count number of files in specified storage account
     [int]$Script:StorageAccountFileCount = (Get-AzStorageBlob -Container $ContainerName -Prefix $SubcontainerName  -Context $storageContext).Count
 
 }
 
+#Function to trigger export and backup of found repotories in in-scope projects.
+Function Invoke-adoBackup() {
 
+    #Create backup folder if it doesn't exist.
+    New-Item -ItemType Directory "$($BackupFolder)" -ErrorAction SilentlyContinue | Out-Null
+    #Clear any files if being rerun, like on a scheduled task.
+    Remove-Item -Path "$($BackupFolder)\*.*"  -Recurse -Force
+
+    #Used for counting number of branches and files.
+    [int]$Script:BranchCount = 0
+    [int]$Script:FilesCount = 0
+    [int]$Script:StorageAccountFileCount = 0
+
+    $Repositories = Get-adoRepositories
+    foreach ($Repo in $Repositories) {
+
+        If ( ($ProjectsInScope -notcontains 'All') -And ($Repo.project.name -notin $ProjectsInScope) ) {
+            Write-Verbose "$($Repo.project.name) not in Scope"
+            Continue
+        }
+
+        $Branches = Get-adoBranches -RepositoryId $Repo.id
+        
+        foreach ($Branch in $Branches) {
+            Write-Output "Starting backup of project: $($Repo.project.name) / Repository: $($repo.Name) / Branch: $($Branch.name.Replace('refs/heads/',''))"
+            $BranchName = $($Branch.name.Replace('refs/heads/','')) # get rid of refs/heads
+            
+            $Script:BranchCount += 1
+            
+            New-adoRepoExport -ProjectName $Repo.project.name -Repository $repo.Name -Branch $BranchName
+            #Count number of files expected to be backed up to storage account
+            Invoke-BackupToAzureStorage -CleanUpAfterUpload $true
+            [int]$Script:FilesCount += 1
+            Write-Output ''
+        }
+    }
+
+}
+
+
+
+#Do not change below here.
+
+    # Connect using a Managed Service Identity - Comment out '-Identity' if testing from PowerShell / VSCode etc.
+    try {
+        Connect-AzAccount -Identity | Out-Null
+    }
+    catch {
+        Write-Output "No system or user assigned identity found. Aborting." 
+        exit
+    }
+
+    #Get rid of really annoying Azure PowerShell upgrade warnings
+    Set-AzConfig -DisplayBreakingChangeWarning $false | Out-Null
+
+
+    #Access token generated against DevOps resource - Get-AzAccessToken requires it to be returned as SecureString, but must be a plaintext string in header.
+    $DevOpsAccessToken = (Get-AzAccessToken -ResourceUrl '499b84ac-1321-427f-aa17-267ca6975798' -AsSecureString).Token
+    $token= ConvertFrom-SecureString -SecureString $DevOpsAccessToken -AsPlainText
+
+    #Header used for REST API calls to Azure DevOps
+    $AzureDevOpsAuthenicationHeader = @{
+        Accept = 'application/json'
+        Authorization = 'Bearer ' + $token
+    }
+
+    #Folder used to create backups into.
+    $BackupFolder   = "$($env:Temp)\adoBackup"
 
 Invoke-adoBackup
-Invoke-BackupToAzureStorage
-
 
 Write-Output ''
 Write-Output ''
 Write-Output "Number of branches found  : $($BranchCount)"
 Write-Output "Number of files exported  : $($FilesCount)"
 Write-Output "Number of files in Storage: $($StorageAccountFileCount)" 
-
-
-
