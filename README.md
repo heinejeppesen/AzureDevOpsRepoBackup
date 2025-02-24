@@ -20,16 +20,15 @@ It can ofcourse also be run manually from PowerShell, VSCode or similar.
 
 ## PowerShell info
 
-The script is tested to work with PowerShell 5.1 and 7+, but support depends on requirements on the Azure modules (Az.KeyVault and Az.Storage) to support current version.
+The script is tested to work with PowerShell 5.1 and 7+, but support depends on requirements on the Azure module (Az.Storage) to support current version.
 Its highly recommended to use PowerShell 7.x or higher.
 
-The two modules used (Az.KeyVault and Az.Storage) are present on Azure Automation hosts, but must be installed manually (using Install-Module) if running on private host.
+The module used (Az.Storage) are present on Azure Automation hosts, but must be installed manually (using Install-Module) if running on private host.
 
 Script is currently tested with:
 
 | Module Name | Module Version |
 |-------------|----------------|
-| Az.Keyvault | 6.3.0 |
 | Az.Storage | 8.0.0 |
 
 ## How does it work?
