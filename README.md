@@ -18,6 +18,6 @@ The script is built to be run automatically and scheduled, like from an Azure Au
 It can ofcourse also be run manually from PowerShell, VSCode or similar.
 
 # Using the solution
-Please visit the [Wiki](../../wiki/Home.md) for suggestions on how to use it.
+Please visit the [Wiki](../../wiki/) for suggestions on how to use it.
 
 This includes both how to run in manually and automatically/scheduled using Azure Automation.
