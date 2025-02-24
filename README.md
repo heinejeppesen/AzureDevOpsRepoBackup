@@ -20,8 +20,8 @@ It can ofcourse also be run manually from PowerShell, VSCode or similar.
 
 ## PowerShell info
 
-The script is tested to work with PowerShell 5.1 and 7+, but support depends on requirements on the Azure module (Az.Storage) to support current version.
-Its highly recommended to use PowerShell 7.x or higher.
+The script is tested to work with PowerShell 5.1 and 7+, but support depends on what the Azure module (Az.Storage) supports.
+Its highly recommended to use PowerShell 7.x or higher. Remove the #Requires -Version 7.0 in the first line, if you want to use PowerShell 5.1.
 
 The module used (Az.Storage) are present on Azure Automation hosts, but must be installed manually (using Install-Module) if running on private host.
 
