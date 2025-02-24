@@ -12,7 +12,7 @@ Like on an Azure Storage Account as blobs, where another regular backup system c
 
 The script does the following:
 
-- Exporting repositories as ZIP files from all or specific projects, provided the Personal Access Token has access to it.
+- Exporting repositories as ZIP files from all or specific projects, provided the identity has access to it.
 - Uploading exported files to Azure Storage Account as blobs - You choose storage tier and further backup/archiving from there.
 
 The script is built to be run automatically and scheduled, like from an Azure Automation Runbook or Scheduled Tasks in Windows, if this is the prefered method.
@@ -47,7 +47,7 @@ Further more you can backup the storage account, if you want/need to keep data s
 The solution is built to use integrated login into DevOps and storage account.
 If you run it locally, with your account - you must have access to the repository to backup and the storage account to write to.
 
-Running as a job in Azure Automation, using either System Assigned or User Assigned Managed Identity is also possible.
+Running as a Runbook in Azure Automation, using either System Assigned or User Assigned Managed Identity is also possible.
 The identity just needs to be added into Azure DevOps and granted access to the repository, as a normal user.
 
 
