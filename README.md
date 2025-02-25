@@ -23,6 +23,6 @@ Please visit the [Wiki](../../wiki/) for suggestions on how to use it.
 This includes both how to run in manually and automatically/scheduled using Azure Automation.
 
 # Deployment
-Examples of how to deploy it automatically, will eventually be available under [Deployments](/Deployment/).
+Examples of how to deploy it automatically, will be available at a later stage under [Deployments](/Deployment/).
 
 This will be in the Azure BICEP language.
