@@ -4,7 +4,7 @@ DevOps repositories are quite safe for storing data (if DevOps is configured cor
 
 But if a codebase is somehow affected by for instance a Supply-Chain Attack, with code injected and committed by malicious attackers and this isn't caught in time,
 it can be necessary to go further back than DevOps's builtin 30 days.
-Relying on developer devices for backup should be the solution.
+Relying on developer devices for backup shouldn't be the solution.
 
 This is where this solution attempts to help, by easily backing up DevOps repositories to a place outside DevOps.
 Like on an Azure Storage Account as blobs, where another regular backup system can also pick it up, for example for legal-hold, using Azure Backup, Veeam and others.
