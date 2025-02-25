@@ -24,4 +24,5 @@ This includes both how to run in manually and automatically/scheduled using Azur
 
 # Deployment
 Examples of how to deploy it automatically, will eventually be available under [Deployments](/Deployment/).
+
 This will be in the Azure BICEP language.
