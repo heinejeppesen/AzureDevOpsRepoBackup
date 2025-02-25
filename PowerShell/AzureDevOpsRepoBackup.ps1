@@ -201,7 +201,7 @@ Function Invoke-adoBackup() {
 
     # Connect using a Managed Service Identity - Comment out '-Identity' if testing from PowerShell / VSCode etc.
     try {
-        Connect-AzAccount -Identity | Out-Null
+        Connect-AzAccount | Out-Null
     }
     catch {
         Write-Output "No system or user assigned identity found. Aborting." 

@@ -1,4 +1,4 @@
-# About the project
+# Azure DevOps Repository Backup
 The idea was to create a simple tool, to help keep anything stored in Azure DevOps repositories backed up outside of DevOps.
 DevOps repositories are quite safe for storing data (if DevOps is configured correctly), but other factors can come into play.
 
@@ -17,7 +17,11 @@ The script does the following:
 The script is built to be run automatically and scheduled, like from an Azure Automation Runbook or Scheduled Tasks in Windows, if this is the prefered method.
 It can ofcourse also be run manually from PowerShell, VSCode or similar.
 
-# Using the solution
+# Documentation
 Please visit the [Wiki](../../wiki/) for suggestions on how to use it.
 
 This includes both how to run in manually and automatically/scheduled using Azure Automation.
+
+# Deployment
+Examples of how to deploy it automatically, will eventually be available under [Deployments](/Deployment/).
+This will be in the Azure BICEP language.
