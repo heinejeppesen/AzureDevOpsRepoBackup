@@ -5,10 +5,10 @@ Import-Module Az.Storage
 ## Start config area 
 
     #Azure DevOps organization name
-    $AzureDevOpsOrganization = 'betaplace'
+    $AzureDevOpsOrganization = 'MyOrg'
 
     #Storage Account Name and container name, where files are to be uploaded in.
-        $storageAccountName = "sgLogging"
+        $storageAccountName = "stdevopsbackups"
         $containerName = "devopsbackup"
 
     #This is the naming method used for Azure Storage. This will create a sub container called i.e. 2024-12-31 for a jobs that runs December 31th in 2024.
