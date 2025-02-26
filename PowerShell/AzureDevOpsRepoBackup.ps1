@@ -21,8 +21,8 @@ Import-Module Az.Storage
         $FileNameSeparator = '__'
 
     #DevOps projects to backup repositories in - Add multiple comma separated and set to only 'All' for all projects.
-        $ProjectsInScope         = @('Maester','DevOpsTesting')
-        #$ProjectsInScope         = @('All')
+        #$ProjectsInScope         = @('Maester','DevOpsTesting')
+        $ProjectsInScope         = @('All')
 
 ## End config area
 
