@@ -37,7 +37,7 @@ Please visit the [Wiki](../../wiki/) for suggestions on how to use it.
 
 This includes both how to run in manually and automatically/scheduled using Azure Automation.
 
-The TL;DR for deploment in Azure Automation is:
+The TL;DR for deployment in Azure Automation is:
 1. Create an Azure Automation account with system- or user- assigned identity.
 2. Create an Azure Storage Account for Blob storage and a container for backups.
     - Grant 'Storage Blob Data Contributor' access to the Automation identity on the container.
